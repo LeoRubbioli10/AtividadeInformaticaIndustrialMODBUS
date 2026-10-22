@@ -1,0 +1,1 @@
+# escrita e leitura de float

@@ -1,0 +1,1 @@
+# leitura e alteração de bits
