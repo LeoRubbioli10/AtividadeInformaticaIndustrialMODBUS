@@ -13,9 +13,10 @@ O servidor disponibiliza medições em Holding Registers e atualiza seus valores
 
 ## 3. Organização do projeto
 
-- servidor/servidor_modbus.py — servidor Modbus TCP e emulação do CLP.
-- cliente/cliente_modbus.py — conexão, leitura, escrita e conversão de dados.
-- exemplos/ — demonstrações de float32, escala e manipulação de bits, se utilizadas.
+- ServidorMODBUS/servidor_modbus.py — servidor Modbus TCP e emulação do CLP.
+- ClienteMODBUS/clientemodbus.py — conexão, leitura, escrita e conversão de dados.
+- exemplos/exemplo_float.py — demonstração de float32 e escala.
+- exemplos/exemplo_bits.py — demonstração de leitura e escrita de bits.
 - requirements.txt — bibliotecas e versões utilizadas.
 - .gitignore — exclusão do ambiente virtual e de arquivos temporários.
 
@@ -47,7 +48,10 @@ Em float32, primeiro se convertem os dois registradores e depois se aplica o fat
 | Bat_disc_max_power | Potência máxima de descarga | FP | 1202–1203 | 2 | — | 1 | 1 | W |
 | Bat_charge_power | Potência de carga | FP | 1204–1205 | 2 | — | 1 | 1 | W |
 | Bat_disc_power | Potência de descarga | FP | 1206–1207 | 2 | — | 1 | 1 | W |
-| Battery_Enable | Habilitar carregamento da bateria | 4X/bit | 1300 | 1 | - | 1 | 1 | 0/1 |
+| Battery_Enable | Habilitar carregamento da bateria | 4X/bit | 1300 | 1 | 0 | 1 | 1 | 0/1 |
+| Bat_charge_sp | Setpoint de potência de carga | FP | 1302–1303 | 2 | — | 1 | 1 | W |
+
+O servidor atualiza as medições a cada 1 segundo, com variações aleatórias limitadas. Quando Battery_Enable (bit 0) está ativo, Bat_charge_power assume o setpoint de carga, quando está desativado, a potência de carga é 0.
 
 ## 5. Instalação e execução
 
@@ -62,21 +66,21 @@ python -m pip install -r requirements.txt
 Comandos de execução, considerando os caminhos indicados na seção 3:
 
 powershell || cmd
-python -m servidor.servidor_modbus
-# Em outro terminal:
-python -m cliente.cliente_modbus
+python -m ServidorMODBUS.servidor_modbus
 
-
-As demonstrações também podem ser executadas na pasta exemplos/, conforme os arquivos implementados.
+# Em outro terminal, com o ambiente virtual ativo:
+python -m exemplos.exemplo_float
+python -m exemplos.exemplo_bits
 
 ## 6. Demonstrações e testes
 
-- **Emulação:** leitura de pelo menos 10 dados e evolução das medições em instantes diferentes; 
-- **Escala:** apresentar valor bruto, Div, multiplicador e valor de ao menos um inteiro escalonado.
-- **Float32:** escrever e recuperar um valor fracionário em dois registradores, considerando a precisão do formato.
-- **Bits:** exibir os 16 bits do registrador, ativar e desativar o bit escolhido e comprovar a preservação dos demais, começando com outros bits ativos.
+- **Emulação:** o servidor implementa 12 dados de medição, atualização periódica e controle de carga por setpoint e bit.
 
-**Resultados:** 
+- **Escala:** V_pv1 (700), Div = 10 e multiplicador = 0,1. A leitura anterior retornou 0 por usar Input Register (FC04); o exemplo foi corrigido para Holding Register (FC03), mas o resultado após a correção ainda não foi informado.
+
+- **Float32:** escrita e leitura do valor 3540.75 em Bat_charge_max_power (1200–1201), com recuperação correta do valor e diferença de precisão de 0.000000.
+
+- **Bits:** teste concluído no Holding Register **1300**, bit **0**. O valor inicial **42** (bits 1, 3 e 5 ativos) passou para **43** ao ativar o bit 0 e retornou a **42** ao desativá-lo. A verificação indicou **Outros bits preservados: True**.
 
 ## 7. Versionamento e entrega
 
