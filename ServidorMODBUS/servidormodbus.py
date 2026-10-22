@@ -14,7 +14,17 @@ class ServidorMODBUS():
         """
         self._db = DataBank()
         self._server = ModbusServer(host=host_ip,port=port,no_block=True,data_bank=self._db)
-       
+
+    def inicializar_registradores(self):
+    
+    def atualizar_medicoes(self):
+        # Atualiza as grandezas simuladas
+    
+    def ler_comandos(self):
+        # Obtém setpoint e estado de Battery_Enable
+    
+    def escrever_float(self, endereco, valor):
+        # Converte float32 para dois registradores
         
     def run(self):
         """
