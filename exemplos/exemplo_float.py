@@ -54,3 +54,6 @@ def executar_demonstracao_float_e_escala():
         cliente.fechar()
     else:
         print("Falha ao conectar no servidor. Verifique se ele está em execução.")
+
+if __name__ == '__main__':
+    executar_demonstracao_float_e_escala()
