@@ -20,6 +20,10 @@ class ClienteMODBUS():
         """Abre a conexão com o servidor"""
         return self._cliente.connect()
 
+    def fechar(self):
+        """Fecha a conexão com o servidor"""
+        self._cliente.close()
+
     def lerDado(self, tipo, addr):
         """
         Método para leitura de um dado da Tabela MODBUS
