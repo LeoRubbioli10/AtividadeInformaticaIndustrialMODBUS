@@ -1,5 +1,4 @@
 from pymodbus.client import ModbusTcpClient
-from pymodbus.client import ModbusTcpClient
 from pymodbus.payload import BinaryPayloadBuilder, BinaryPayloadDecoder
 from pymodbus.constants import Endian
 import struct 
@@ -16,6 +15,10 @@ class ClienteMODBUS():
         # Cria o cliente TCP
         self._cliente = ModbusTcpClient(host=server_ip, port=porta)
         self._scan_time = scan_time
+
+    def conectar(self):
+        """Abre a conexão com o servidor"""
+        return self._cliente.connect()
 
     def lerDado(self, tipo, addr):
         """
@@ -88,7 +91,7 @@ class ClienteMODBUS():
                 byteorder=Endian.Big, 
                 wordorder=Endian.Big
             )
-        valor_float = decoder.decode_32bit_float()
+            valor_float = decoder.decode_32bit_float()
         return valor_float
         return None
 
