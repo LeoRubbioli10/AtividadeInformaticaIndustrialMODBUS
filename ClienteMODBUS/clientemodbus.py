@@ -116,3 +116,31 @@ class ClienteMODBUS():
             bits = [(valor >> i) & 1 for i in range(16)]
             return bits
         return None
+
+    def escrever_bit_individual(self, addr, bit_index, valor_bit):
+        """
+        Altera um bit específico (0-15) de um registrador, preservando os demais.
+        valor_bit deve ser 0 ou 1.
+        """
+        if not (0 <= bit_index <= 15):
+            print("Índice de bit inválido.")
+            return False
+            
+        # 1. Lê o registrador atual
+        resp_leitura = self._cliente.read_holding_registers(address=addr, count=1, slave=1)
+        if not resp_leitura or resp_leitura.isError():
+            return False
+            
+        valor_atual = resp_leitura.registers[0]
+        
+        # 2. Aplica a máscara para alterar o bit
+        if valor_bit == 1:
+            # Força o bit para 1 usando OR (|)
+            novo_valor = valor_atual | (1 << bit_index)
+        else:
+            # Força o bit para 0 usando AND (&) com o inverso (~) da posição
+            novo_valor = valor_atual & ~(1 << bit_index)
+            
+        # 3. Escreve o valor modificado de volta
+        resp_escrita = self._cliente.write_register(address=addr, value=novo_valor, slave=1)
+        return not resp_escrita.isError()
