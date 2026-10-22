@@ -103,3 +103,16 @@ class ClienteMODBUS():
         # Escreve os 2 registradores gerados
         resp = self._cliente.write_registers(address=addr, values=payload, slave=1)
         return not resp.isError()
+
+    def ler_bits_registrador(self, addr):
+        """
+        Lê um registrador e retorna uma lista com o estado dos seus 16 bits (0 ou 1).
+        O bit 0 é o menos significativo (posição 0 da lista).
+        """
+        resp = self._cliente.read_holding_registers(address=addr, count=1, slave=1)
+        if resp and not resp.isError():
+            valor = resp.registers[0]
+            # Cria uma lista verificando cada bit de 0 a 15
+            bits = [(valor >> i) & 1 for i in range(16)]
+            return bits
+        return None
