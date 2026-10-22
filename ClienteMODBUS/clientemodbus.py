@@ -96,7 +96,7 @@ class ClienteMODBUS():
                 wordorder=Endian.Big
             )
             valor_float = decoder.decode_32bit_float()
-        return valor_float
+            return valor_float
         return None
 
     def escrever_float(self, addr, valor):
