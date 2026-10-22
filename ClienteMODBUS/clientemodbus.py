@@ -1,8 +1,5 @@
 from pymodbus.client import ModbusTcpClient
-from pymodbus.payload import BinaryPayloadBuilder, BinaryPayloadDecoder
-from pymodbus.constants import Endian
-import struct 
-from time import sleep
+
 
 class ClienteMODBUS():
     """
@@ -85,17 +82,16 @@ class ClienteMODBUS():
         Lê dois Holding Registers consecutivos e converte para float32.
         """
         # Lê 2 registradores a partir do endereço
-        resp = self._cliente.read_holding_registers(address=addr, count=2, slave=1)
-        
+        resp = self._cliente.read_holding_registers(address=addr, count=2, device_id=1)
+
         if resp and not resp.isError():
             # Decodifica os dois registradores para float32
-            # A ordem de bytes e palavras deve ser documentada e igual à do servidor
-            decoder = BinaryPayloadDecoder.fromRegisters(
-                resp.registers, 
-                byteorder=Endian.Big, 
-                wordorder=Endian.Big
+            # Mesma ordem de palavras utilizada no servidor
+            valor_float = ModbusTcpClient.convert_from_registers(
+                resp.registers,
+                data_type=ModbusTcpClient.DATATYPE.FLOAT32,
+                word_order="little"
             )
-            valor_float = decoder.decode_32bit_float()
             return valor_float
         return None
 
@@ -103,20 +99,24 @@ class ClienteMODBUS():
         """
         Converte um float32 em dois registradores e os escreve no servidor.
         """
-        builder = BinaryPayloadBuilder(byteorder=Endian.Big, wordorder=Endian.Big)
-        builder.add_32bit_float(valor)
-        payload = builder.to_registers()
-        
+        payload = ModbusTcpClient.convert_to_registers(
+            valor,
+            data_type=ModbusTcpClient.DATATYPE.FLOAT32,
+            word_order="little"
+        )
+
         # Escreve os 2 registradores gerados
-        resp = self._cliente.write_registers(address=addr, values=payload, slave=1)
-        return not resp.isError()
+        resp = self._cliente.write_registers(address=addr, values=payload, device_id=1)
+
+        return bool(resp and not resp.isError())
 
     def ler_bits_registrador(self, addr):
         """
         Lê um registrador e retorna uma lista com o estado dos seus 16 bits (0 ou 1).
         O bit 0 é o menos significativo (posição 0 da lista).
         """
-        resp = self._cliente.read_holding_registers(address=addr, count=1, slave=1)
+        resp = self._cliente.read_holding_registers(address=addr, count=1, device_id=1)
+
         if resp and not resp.isError():
             valor = resp.registers[0]
             # Cria uma lista verificando cada bit de 0 a 15
@@ -132,9 +132,14 @@ class ClienteMODBUS():
         if not (0 <= bit_index <= 15):
             print("Índice de bit inválido.")
             return False
-            
+
+        if valor_bit not in (0, 1):
+            print("Valor do bit inválido. Utilize 0 ou 1.")
+            return False
+
         # 1. Lê o registrador atual
-        resp_leitura = self._cliente.read_holding_registers(address=addr, count=1, slave=1)
+        resp_leitura = self._cliente.read_holding_registers(address=addr, count=1, device_id=1)
+
         if not resp_leitura or resp_leitura.isError():
             return False
             
@@ -149,5 +154,8 @@ class ClienteMODBUS():
             novo_valor = valor_atual & ~(1 << bit_index)
             
         # 3. Escreve o valor modificado de volta
-        resp_escrita = self._cliente.write_register(address=addr, value=novo_valor, slave=1)
-        return not resp_escrita.isError()
+        resp_escrita = self._cliente.write_register(
+            address=addr, value=novo_valor, device_id=1
+        )
+
+        return bool(resp_escrita and not resp_escrita.isError())
