@@ -90,4 +90,16 @@ class ClienteMODBUS():
             )
         valor_float = decoder.decode_32bit_float()
         return valor_float
-    return None
+        return None
+
+    def escrever_float(self, addr, valor):
+        """
+        Converte um float32 em dois registradores e os escreve no servidor.
+        """
+        builder = BinaryPayloadBuilder(byteorder=Endian.Big, wordorder=Endian.Big)
+        builder.add_32bit_float(valor)
+        payload = builder.to_registers()
+        
+        # Escreve os 2 registradores gerados
+        resp = self._cliente.write_registers(address=addr, values=payload, slave=1)
+        return not resp.isError()
